@@ -8,6 +8,7 @@ import './App.css';
 function App() {
     const [user, setUser] = useState(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     // Function to update user and sync with localStorage
     const updateUser = (userData) => {
@@ -38,6 +39,8 @@ function App() {
                 localStorage.removeItem('user');
             }
         }
+
+        setIsLoading(false);
     }, []);
 
     const handleLogin = (userData, token) => {
@@ -62,6 +65,18 @@ function App() {
         console.log('App.js: Current localStorage user:', localStorage.getItem('user'));
     }, [user]);
 
+    // Show loading screen while checking authentication
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-16 w-16 border-4 border-white border-t-transparent mx-auto mb-4"></div>
+                    <p className="text-white text-xl">Loading Langur Burja...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <Router>
             <div className="App min-h-screen bg-gradient-to-br from-green-400 to-blue-500">
@@ -71,7 +86,7 @@ function App() {
                         element={
                             !isAuthenticated ?
                                 <Login onLogin={handleLogin} /> :
-                                <Navigate to="/lobby" />
+                                <Navigate to="/lobby" replace />
                         }
                     />
                     <Route
@@ -79,7 +94,7 @@ function App() {
                         element={
                             isAuthenticated ?
                                 <GameLobby user={user} onLogout={handleLogout} /> :
-                                <Navigate to="/login" />
+                                <Navigate to="/login" replace />
                         }
                     />
                     <Route
@@ -87,10 +102,19 @@ function App() {
                         element={
                             isAuthenticated ?
                                 <GameRoom user={user} setUser={updateUser} /> :
-                                <Navigate to="/login" />
+                                <Navigate to="/login" replace />
                         }
                     />
-                    <Route path="/" element={<Navigate to="/login" />} />
+                    <Route path="/" element={<Navigate to="/login" replace />} />
+                    {/* Catch-all route for 404s */}
+                    <Route
+                        path="*"
+                        element={
+                            isAuthenticated ?
+                                <Navigate to="/lobby" replace /> :
+                                <Navigate to="/login" replace />
+                        }
+                    />
                 </Routes>
             </div>
         </Router>

@@ -34,15 +34,15 @@ const io = socketIo(server, {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Serve static files from dist directory BEFORE API routes
+// Serve static files from public directory BEFORE API routes
 if (process.env.NODE_ENV === 'production') {
     // Serve static files with proper cache headers
-    app.use(express.static(path.join(__dirname, '../dist'), {
+    app.use(express.static(path.join(__dirname, '../public'), {
         maxAge: '1y',
         etag: false
     }));
 
-    console.log('Production mode: Serving static files from dist directory');
+    console.log('Production mode: Serving static files from public directory');
 } else {
     console.log('Development mode: Not serving static files');
 }
@@ -865,7 +865,7 @@ if (process.env.NODE_ENV === 'production') {
         }
 
         console.log(`SPA Fallback: Serving index.html for ${req.path}`);
-        res.sendFile(path.join(__dirname, '../dist', 'index.html'));
+        res.sendFile(path.join(__dirname, '../public', 'index.html'));
     });
 }
 
@@ -880,7 +880,7 @@ server.listen(PORT, () => {
     console.log(`Environment: ${process.env.NODE_ENV}`);
     console.log(`Built at: 2025-06-14 22:33:12 UTC`);
     if (process.env.NODE_ENV === 'production') {
-        console.log(`Serving static files from: ${path.join(__dirname, '../dist')}`);
+        console.log(`Serving static files from: ${path.join(__dirname, '../public')}`);
         console.log(`SPA fallback enabled for client-side routing`);
     }
 });

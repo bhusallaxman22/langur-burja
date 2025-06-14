@@ -8,10 +8,10 @@
     "dev": "nodemon api/server.js",
     "build": "npm run build:frontend && npm run move:build",
     "build:frontend": "cd frontend && npm install && npm run build",
-    "move:build": "rm -rf dist && mkdir -p dist && cp -r frontend/build/* dist/",
+    "move:build": "rm -rf dist && mkdir -p public && cp -r frontend/build/* public/",
     "build:windows": "npm run build:frontend:windows && npm run move:build:windows",
     "build:frontend:windows": "cd frontend && npm install && npm run build",
-    "move:build:windows": "if exist dist rmdir /s /q dist && mkdir dist && xcopy frontend\\build\\* dist\\ /e /i",
+    "move:build:windows": "if exist public rmdir /s /q public && mkdir public && xcopy frontend\\build\\* public\\ /e /i",
     "postinstall": "npm run build",
     "vercel-build": "npm run build"
   },

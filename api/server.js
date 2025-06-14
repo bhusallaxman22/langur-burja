@@ -18,7 +18,9 @@ const corsOptions = {
         ? [
             'https://langur-burja.vercel.app',
             'https://langur-burja-git-main-bhusallaxman22.vercel.app',
-            'https://langur-burja-bhusallaxman22.vercel.app'
+            'https://langur-burja-bhusallaxman22.vercel.app',
+            "http://localhost:3000",
+
         ]
         : "http://localhost:3000",
     methods: ["GET", "POST"],

@@ -9,13 +9,7 @@ const CheckoutForm = ({ amount, onSuccess, onError, onCancel, loading, setLoadin
     const [clientSecret, setClientSecret] = useState('');
     const [paymentError, setPaymentError] = useState('');
 
-    useEffect(() => {
-        if (amount > 0 && userId) {
-            createPaymentIntent();
-        }
-    }, [amount, userId]);
-
-    const createPaymentIntent = async () => {
+    const createPaymentIntent = React.useCallback(async () => {
         try {
             console.log(`Creating payment intent for user ${userId}, amount: $${amount}`);
 
@@ -43,7 +37,13 @@ const CheckoutForm = ({ amount, onSuccess, onError, onCancel, loading, setLoadin
             console.error('Error creating payment intent:', error);
             setPaymentError('Failed to initialize payment');
         }
-    };
+    }, [amount, userId]);
+
+    useEffect(() => {
+        if (amount > 0 && userId) {
+            createPaymentIntent();
+        }
+    }, [amount, createPaymentIntent, userId]);
 
     const handleSubmit = async (event) => {
         event.preventDefault();

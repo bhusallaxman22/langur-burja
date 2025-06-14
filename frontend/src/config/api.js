@@ -5,12 +5,15 @@ const config = {
         SOCKET_URL: 'http://localhost:8080'
     },
     production: {
-        API_BASE_URL: 'https://langur-burja-backend.vercel.app',
-        SOCKET_URL: 'https://langur-burja-backend.vercel.app'
+        // When served from the same domain, use relative URLs
+        API_BASE_URL: window.location.origin,
+        SOCKET_URL: window.location.origin
     }
 };
 
 const environment = process.env.NODE_ENV || 'development';
 export const API_CONFIG = config[environment];
+
+console.log(`API Config loaded for ${environment}:`, API_CONFIG);
 
 export default API_CONFIG;

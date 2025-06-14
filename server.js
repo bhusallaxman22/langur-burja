@@ -7,6 +7,7 @@ const cors = require('cors');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
@@ -15,9 +16,10 @@ const server = http.createServer(app);
 const corsOptions = {
     origin: process.env.NODE_ENV === 'production'
         ? [
-            'https://langur-burja-frontend.vercel.app',
-            'https://langur-burja-frontend-git-main-bhusallaxman22.vercel.app',
-            'https://langur-burja-frontend-bhusallaxman22.vercel.app'
+            'https://langur-burja-khaki.vercel.app',
+            'https://langur-burja-khaki-git-main-bhusallaxman22.vercel.app',
+            'https://langur-burja-khaki-bhusallaxman22.vercel.app',
+            'https://langurburja.laxmanbhusal.com.np',
         ]
         : "http://localhost:3000",
     methods: ["GET", "POST"],
@@ -31,12 +33,24 @@ const io = socketIo(server, {
 app.use(cors(corsOptions));
 app.use(express.json());
 
+// Serve static files from dist directory
+if (process.env.NODE_ENV === 'production') {
+    // Serve static files from the dist directory
+    app.use(express.static(path.join(__dirname, 'dist')));
+
+    // API routes should be handled before the catch-all
+    console.log('Production mode: Serving static files from dist directory');
+} else {
+    console.log('Development mode: Not serving static files');
+}
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
     res.json({
         status: 'ok',
         timestamp: new Date().toISOString(),
-        env: process.env.NODE_ENV
+        env: process.env.NODE_ENV,
+        build_time: new Date('2025-06-14T21:00:49Z').toISOString()
     });
 });
 
@@ -230,7 +244,7 @@ async function updateUserBalance(userId, newBalance, transactionType, amount, de
     }
 }
 
-// Game logic (keeping the same as before)
+// Game logic class
 class LangurBurjaGame {
     constructor(roomCode) {
         this.roomCode = roomCode;
@@ -371,7 +385,7 @@ class LangurBurjaGame {
     }
 }
 
-// Routes
+// API Routes
 app.post('/api/register', async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -839,6 +853,13 @@ io.on('connection', (socket) => {
     });
 });
 
+// Serve React app for all non-API routes (must be last)
+if (process.env.NODE_ENV === 'production') {
+    app.get('*', (req, res) => {
+        res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+    });
+}
+
 // Initialize database and start server
 if (process.env.NODE_ENV !== 'production') {
     initDatabase();
@@ -848,6 +869,10 @@ const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Environment: ${process.env.NODE_ENV}`);
+    console.log(`Built at: ${new Date('2025-06-14T21:00:49Z').toISOString()}`);
+    if (process.env.NODE_ENV === 'production') {
+        console.log(`Serving static files from: ${path.join(__dirname, 'dist')}`);
+    }
 });
 
 // Export for Vercel

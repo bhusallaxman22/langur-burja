@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { API_CONFIG } from '../config/api';
 
 const GameLobby = ({ user, onLogout }) => {
     const [roomCode, setRoomCode] = useState('');
@@ -29,6 +30,21 @@ const GameLobby = ({ user, onLogout }) => {
             }, 1000);
         }
     };
+
+    // Check API connection on mount
+    useEffect(() => {
+        const checkConnection = async () => {
+            try {
+                const response = await fetch(`${API_CONFIG.API_BASE_URL}/api/health`);
+                const data = await response.json();
+                console.log('API Health Check:', data);
+            } catch (error) {
+                console.error('API connection failed:', error);
+            }
+        };
+
+        checkConnection();
+    }, []);
 
     // Animated background elements
     const FloatingSymbol = ({ symbol, delay, duration, size = 'text-4xl' }) => (
@@ -198,6 +214,15 @@ const GameLobby = ({ user, onLogout }) => {
                             🚪 Logout
                         </button>
                     </div>
+
+                    {/* Environment indicator */}
+                    {process.env.NODE_ENV === 'development' && (
+                        <div className="mt-4 text-center">
+                            <span className="text-white/60 text-xs">
+                                API: {API_CONFIG.API_BASE_URL}
+                            </span>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

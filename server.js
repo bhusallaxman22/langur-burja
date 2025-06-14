@@ -1,4 +1,3 @@
-
 require('dotenv').config();
 const express = require('express');
 const http = require('http');
@@ -11,26 +10,47 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 const server = http.createServer(app);
+
+// Configure CORS for production
+const corsOptions = {
+    origin: process.env.NODE_ENV === 'production'
+        ? [
+            'https://langur-burja-frontend.vercel.app',
+            'https://langur-burja-frontend-git-main-bhusallaxman22.vercel.app',
+            'https://langur-burja-frontend-bhusallaxman22.vercel.app'
+        ]
+        : "http://localhost:3000",
+    methods: ["GET", "POST"],
+    credentials: true
+};
+
 const io = socketIo(server, {
-    cors: {
-        origin: "http://localhost:3000",
-        methods: ["GET", "POST"]
-    }
+    cors: corsOptions
 });
 
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
-// Database connection - Updated to use environment variables
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+    res.json({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        env: process.env.NODE_ENV
+    });
+});
+
+// Database connection with environment variables
 const dbConfig = {
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    port: 19995, // Default MySQL port for Aiven
-    ssl: {
-        rejectUnauthorized: false // Required for cloud MySQL connections
-    }
+    port: process.env.DB_PORT || 19995,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    connectTimeout: 60000,
+    acquireTimeout: 60000,
+    timeout: 60000
 };
 
 // Game symbols
@@ -44,6 +64,18 @@ const playerSockets = new Map();
 async function initDatabase() {
     try {
         const connection = await mysql.createConnection(dbConfig);
+
+        // Check if updated_at column exists, if not add it
+        try {
+            await connection.execute(`
+        ALTER TABLE users ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      `);
+            console.log('Added updated_at column to users table');
+        } catch (error) {
+            if (error.code !== 'ER_DUP_FIELDNAME') {
+                console.log('updated_at column already exists or other error:', error.message);
+            }
+        }
 
         await connection.execute(`
       CREATE TABLE IF NOT EXISTS users (
@@ -114,7 +146,7 @@ async function initDatabase() {
     }
 }
 
-// Update user balance in database
+// Update user balance in database - Fixed version
 async function updateUserBalance(userId, newBalance, transactionType, amount, description = '', stripePaymentIntentId = null) {
     let connection;
     try {
@@ -139,17 +171,37 @@ async function updateUserBalance(userId, newBalance, transactionType, amount, de
         const balanceBefore = parseFloat(currentUser[0].balance);
         console.log(`Updating balance for user ${userId}: ${balanceBefore} -> ${newBalance}`);
 
-        // Update user balance
-        const [updateResult] = await connection.execute(
-            'UPDATE users SET balance = ?, updated_at = NOW() WHERE id = ?',
-            [newBalance, userId]
-        );
+        // Update user balance - with fallback for missing updated_at column
+        try {
+            const [updateResult] = await connection.execute(
+                'UPDATE users SET balance = ?, updated_at = NOW() WHERE id = ?',
+                [newBalance, userId]
+            );
 
-        if (updateResult.affectedRows === 0) {
-            await connection.rollback();
-            await connection.end();
-            console.error(`Failed to update balance for user ${userId}`);
-            return false;
+            if (updateResult.affectedRows === 0) {
+                await connection.rollback();
+                await connection.end();
+                console.error(`Failed to update balance for user ${userId}`);
+                return false;
+            }
+        } catch (updateError) {
+            if (updateError.code === 'ER_BAD_FIELD_ERROR') {
+                // Fallback: update without updated_at column
+                console.log('updated_at column not found, updating without it');
+                const [updateResult] = await connection.execute(
+                    'UPDATE users SET balance = ? WHERE id = ?',
+                    [newBalance, userId]
+                );
+
+                if (updateResult.affectedRows === 0) {
+                    await connection.rollback();
+                    await connection.end();
+                    console.error(`Failed to update balance for user ${userId}`);
+                    return false;
+                }
+            } else {
+                throw updateError;
+            }
         }
 
         // Record transaction
@@ -178,7 +230,7 @@ async function updateUserBalance(userId, newBalance, transactionType, amount, de
     }
 }
 
-// Game logic
+// Game logic (keeping the same as before)
 class LangurBurjaGame {
     constructor(roomCode) {
         this.roomCode = roomCode;
@@ -443,7 +495,7 @@ app.post('/api/create-payment-intent', async (req, res) => {
     }
 });
 
-// Confirm payment and add funds - FIXED VERSION
+// Confirm payment and add funds
 app.post('/api/confirm-payment', async (req, res) => {
     let connection;
     try {
@@ -504,20 +556,43 @@ app.post('/api/confirm-payment', async (req, res) => {
 
         console.log(`User ${userId} balance: ${currentBalance} -> ${newBalance}`);
 
-        // Update user balance
-        const [updateResult] = await connection.execute(
-            'UPDATE users SET balance = ?, updated_at = NOW() WHERE id = ?',
-            [newBalance, userId]
-        );
+        // Update user balance - with fallback for missing updated_at column
+        try {
+            const [updateResult] = await connection.execute(
+                'UPDATE users SET balance = ?, updated_at = NOW() WHERE id = ?',
+                [newBalance, userId]
+            );
 
-        if (updateResult.affectedRows === 0) {
-            await connection.rollback();
-            await connection.end();
-            console.error(`Failed to update balance for user ${userId}`);
-            return res.status(500).json({
-                success: false,
-                message: 'Failed to update user balance'
-            });
+            if (updateResult.affectedRows === 0) {
+                await connection.rollback();
+                await connection.end();
+                console.error(`Failed to update balance for user ${userId}`);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Failed to update user balance'
+                });
+            }
+        } catch (updateError) {
+            if (updateError.code === 'ER_BAD_FIELD_ERROR') {
+                // Fallback: update without updated_at column
+                console.log('updated_at column not found, updating without it');
+                const [updateResult] = await connection.execute(
+                    'UPDATE users SET balance = ? WHERE id = ?',
+                    [newBalance, userId]
+                );
+
+                if (updateResult.affectedRows === 0) {
+                    await connection.rollback();
+                    await connection.end();
+                    console.error(`Failed to update balance for user ${userId}`);
+                    return res.status(500).json({
+                        success: false,
+                        message: 'Failed to update user balance'
+                    });
+                }
+            } else {
+                throw updateError;
+            }
         }
 
         // Record transaction
@@ -765,9 +840,15 @@ io.on('connection', (socket) => {
 });
 
 // Initialize database and start server
-initDatabase().then(() => {
-    const PORT = process.env.PORT || 8080;
-    server.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
-    });
+if (process.env.NODE_ENV !== 'production') {
+    initDatabase();
+}
+
+const PORT = process.env.PORT || 8080;
+server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV}`);
 });
+
+// Export for Vercel
+module.exports = app;

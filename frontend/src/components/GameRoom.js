@@ -6,7 +6,7 @@ import InteractiveBoard from './InteractiveBoard';
 import PlayerList from './PlayerList';
 import GameHeader from './GameHeader';
 import AddFundsModal from './AddFundsModal';
-import DebugPanel from './DebugPanel';
+import { API_CONFIG } from '../config/api';
 
 const GameRoom = ({ user, setUser }) => {
     const { roomCode } = useParams();
@@ -27,15 +27,18 @@ const GameRoom = ({ user, setUser }) => {
     const [showAddFunds, setShowAddFunds] = useState(false);
 
     // Function to update user data and sync with localStorage
-    const updateUserData = (newUserData) => {
+    const updateUserData = React.useCallback((newUserData) => {
         console.log('Updating user data:', newUserData);
         setUser(newUserData);
         localStorage.setItem('user', JSON.stringify(newUserData));
         console.log('Updated localStorage with:', newUserData);
-    };
+    }, [setUser]);
 
     useEffect(() => {
-        const newSocket = io('');
+        const newSocket = io(API_CONFIG.SOCKET_URL, {
+            withCredentials: true,
+            transports: ['websocket', 'polling']
+        });
         setSocket(newSocket);
 
         newSocket.on('connect', () => {
@@ -155,7 +158,7 @@ const GameRoom = ({ user, setUser }) => {
         });
 
         return () => newSocket.close();
-    }, [roomCode, user, navigate]);
+    }, [roomCode, user, navigate, updateUserData]);
 
     const placeBet = (symbol, amount) => {
         if (socket) {
@@ -227,7 +230,7 @@ const GameRoom = ({ user, setUser }) => {
             setTimeout(async () => {
                 try {
                     console.log('Fetching balance from API for verification');
-                    const response = await fetch(`/api/balance/${user.id}`);
+                    const response = await fetch(`${API_CONFIG.API_BASE_URL}/api/balance/${user.id}`);
                     const data = await response.json();
                     if (data.success) {
                         console.log(`Server balance verification: $${data.balance} vs local: $${newBalance}`);
@@ -336,7 +339,6 @@ const GameRoom = ({ user, setUser }) => {
                     user={user}
                 />
             )}
-            {process.env.NODE_ENV === 'development' && <DebugPanel user={user} />}
         </div>
     );
 };

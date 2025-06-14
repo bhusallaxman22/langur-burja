@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { API_CONFIG } from '../config/api';
 
 const CheckoutForm = ({ amount, onSuccess, onError, onCancel, loading, setLoading, userId }) => {
     const stripe = useStripe();
@@ -8,17 +9,11 @@ const CheckoutForm = ({ amount, onSuccess, onError, onCancel, loading, setLoadin
     const [clientSecret, setClientSecret] = useState('');
     const [paymentError, setPaymentError] = useState('');
 
-    useEffect(() => {
-        if (amount > 0 && userId) {
-            createPaymentIntent();
-        }
-    }, [amount, userId]);
-
-    const createPaymentIntent = async () => {
+    const createPaymentIntent = React.useCallback(async () => {
         try {
             console.log(`Creating payment intent for user ${userId}, amount: $${amount}`);
 
-            const response = await fetch('/api/create-payment-intent', {
+            const response = await fetch(`${API_CONFIG.API_BASE_URL}/api/create-payment-intent`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -42,7 +37,14 @@ const CheckoutForm = ({ amount, onSuccess, onError, onCancel, loading, setLoadin
             console.error('Error creating payment intent:', error);
             setPaymentError('Failed to initialize payment');
         }
-    };
+    }, [amount, userId]);
+
+
+    useEffect(() => {
+        if (amount > 0 && userId) {
+            createPaymentIntent();
+        }
+    }, [amount, createPaymentIntent, userId]);
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -74,7 +76,7 @@ const CheckoutForm = ({ amount, onSuccess, onError, onCancel, loading, setLoadin
 
             // Confirm payment on the backend
             try {
-                const response = await fetch('/api/confirm-payment', {
+                const response = await fetch(`${API_CONFIG.API_BASE_URL}/api/confirm-payment`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -185,7 +187,7 @@ const AddFundsModal = ({ onClose, onAddFunds, currentBalance, user }) => {
 
     useEffect(() => {
         // Get Stripe publishable key from backend
-        fetch('/api/stripe-config')
+        fetch(`${API_CONFIG.API_BASE_URL}/api/stripe-config`)
             .then(response => response.json())
             .then(data => {
                 console.log('Stripe config loaded');

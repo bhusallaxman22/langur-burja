@@ -16,10 +16,9 @@ const server = http.createServer(app);
 const corsOptions = {
     origin: process.env.NODE_ENV === 'production'
         ? [
-            'https://langur-burja-khaki.vercel.app',
-            'https://langur-burja-khaki-git-main-bhusallaxman22.vercel.app',
-            'https://langur-burja-khaki-bhusallaxman22.vercel.app',
-            'https://langurburja.laxmanbhusal.com.np',
+            'https://langur-burja.vercel.app',
+            'https://langur-burja-git-main-bhusallaxman22.vercel.app',
+            'https://langur-burja-bhusallaxman22.vercel.app'
         ]
         : "http://localhost:3000",
     methods: ["GET", "POST"],
@@ -33,12 +32,14 @@ const io = socketIo(server, {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Serve static files from dist directory
+// Serve static files from dist directory BEFORE API routes
 if (process.env.NODE_ENV === 'production') {
-    // Serve static files from the dist directory
-    app.use(express.static(path.join(__dirname, 'dist')));
+    // Serve static files with proper cache headers
+    app.use(express.static(path.join(__dirname, '../dist'), {
+        maxAge: '1y',
+        etag: false
+    }));
 
-    // API routes should be handled before the catch-all
     console.log('Production mode: Serving static files from dist directory');
 } else {
     console.log('Development mode: Not serving static files');
@@ -50,7 +51,7 @@ app.get('/api/health', (req, res) => {
         status: 'ok',
         timestamp: new Date().toISOString(),
         env: process.env.NODE_ENV,
-        build_time: new Date('2025-06-14T21:00:49Z').toISOString()
+        build_time: '2025-06-14 22:33:12 UTC',
     });
 });
 
@@ -62,9 +63,6 @@ const dbConfig = {
     database: process.env.DB_NAME,
     port: process.env.DB_PORT || 19995,
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-    connectTimeout: 60000,
-    acquireTimeout: 60000,
-    timeout: 60000
 };
 
 // Game symbols
@@ -853,10 +851,19 @@ io.on('connection', (socket) => {
     });
 });
 
-// Serve React app for all non-API routes (must be last)
+// SPA Fallback - This MUST be the last route
+// Handle React Router routes - serve index.html for all non-API routes
 if (process.env.NODE_ENV === 'production') {
     app.get('*', (req, res) => {
-        res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+        // Don't serve index.html for API routes, socket.io, or static assets
+        if (req.path.startsWith('/api/') ||
+            req.path.startsWith('/socket.io/') ||
+            req.path.includes('.')) {
+            return res.status(404).json({ error: 'Not found' });
+        }
+
+        console.log(`SPA Fallback: Serving index.html for ${req.path}`);
+        res.sendFile(path.join(__dirname, '../dist', 'index.html'));
     });
 }
 
@@ -869,9 +876,10 @@ const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Environment: ${process.env.NODE_ENV}`);
-    console.log(`Built at: ${new Date('2025-06-14T21:00:49Z').toISOString()}`);
+    console.log(`Built at: 2025-06-14 22:33:12 UTC`);
     if (process.env.NODE_ENV === 'production') {
-        console.log(`Serving static files from: ${path.join(__dirname, 'dist')}`);
+        console.log(`Serving static files from: ${path.join(__dirname, '../dist')}`);
+        console.log(`SPA fallback enabled for client-side routing`);
     }
 });
 

@@ -6,8 +6,8 @@ const config = {
     },
     production: {
         // When served from the same domain, use relative URLs
-        API_BASE_URL: window.location.origin,
-        SOCKET_URL: window.location.origin
+        API_BASE_URL: '',
+        SOCKET_URL: ''
     }
 };
 

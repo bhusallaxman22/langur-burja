@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { API_CONFIG } from '../config/api';
 
 const CheckoutForm = ({ amount, onSuccess, onError, onCancel, loading, setLoading, userId }) => {
     const stripe = useStripe();

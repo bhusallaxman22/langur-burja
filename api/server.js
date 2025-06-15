@@ -16,7 +16,7 @@ const server = http.createServer(app);
 const corsOptions = {
     origin: process.env.NODE_ENV === 'production'
         ? [
-            'https://langur-burja.vercel.app',
+            'https://langur-burja-delta.vercel.app',
             'https://langur-burja-git-main-bhusallaxman22.vercel.app',
             'https://langur-burja-bhusallaxman22.vercel.app'
         ]

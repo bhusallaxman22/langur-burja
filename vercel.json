@@ -3,7 +3,7 @@
     "routes": [
         {
             "src": "/api/(.*)",
-            "dest": "/server.js"
+            "dest": "/api/server.js"
         },
         {
             "src": "/socket.io/(.*)",
@@ -11,11 +11,11 @@
         },
         {
             "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|map))",
-            "dest": "/server.js"
+            "dest": "/api/server.js"
         },
         {
             "src": "/(.*)",
-            "dest": "/server.js"
+            "dest": "/api/server.js"
         }
     ],
     "env": {

@@ -35,7 +35,7 @@ const GameLobby = ({ user, onLogout }) => {
     useEffect(() => {
         const checkConnection = async () => {
             try {
-                const response = await fetch(`${API_CONFIG.API_BASE_URL}/api/health`);
+                const response = await fetch(`/api/health`);
                 const data = await response.json();
                 console.log('API Health Check:', data);
             } catch (error) {

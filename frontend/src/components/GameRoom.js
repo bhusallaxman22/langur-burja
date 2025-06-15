@@ -230,7 +230,7 @@ const GameRoom = ({ user, setUser }) => {
             setTimeout(async () => {
                 try {
                     console.log('Fetching balance from API for verification');
-                    const response = await fetch(`${API_CONFIG.API_BASE_URL}/api/balance/${user.id}`);
+                    const response = await fetch(`/api/balance/${user.id}`);
                     const data = await response.json();
                     if (data.success) {
                         console.log(`Server balance verification: $${data.balance} vs local: $${newBalance}`);

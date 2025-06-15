@@ -18,7 +18,7 @@ const Login = ({ onLogin }) => {
 
         try {
             const endpoint = isLogin ? '/api/login' : '/api/register';
-            const response = await axios.post(`${API_CONFIG.API_BASE_URL}${endpoint}`, formData);
+            const response = await axios.post(`${endpoint}`, formData);
 
             if (response.data.success) {
                 if (isLogin) {

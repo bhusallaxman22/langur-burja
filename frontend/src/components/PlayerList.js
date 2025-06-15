@@ -50,10 +50,10 @@ const PlayerList = ({ players, dealer, currentUserId, gameState }) => {
                         <div
                             key={player.id}
                             className={`p-4 rounded-xl border-2 transition-all duration-300 transform hover:scale-105 ${isCurrentUser
-                                    ? 'border-yellow-400 bg-gradient-to-r from-yellow-400/20 to-orange-500/20 shadow-lg'
-                                    : isDealer
-                                        ? 'border-purple-400 bg-gradient-to-r from-purple-400/20 to-pink-500/20'
-                                        : 'border-white/30 bg-white/10 hover:bg-white/20'
+                                ? 'border-yellow-400 bg-gradient-to-r from-yellow-400/20 to-orange-500/20 shadow-lg'
+                                : isDealer
+                                    ? 'border-purple-400 bg-gradient-to-r from-purple-400/20 to-pink-500/20'
+                                    : 'border-white/30 bg-white/10 hover:bg-white/20'
                                 }`}
                             style={{
                                 animationDelay: `${index * 100}ms`
@@ -63,10 +63,10 @@ const PlayerList = ({ players, dealer, currentUserId, gameState }) => {
                                 <div className="flex items-center space-x-3">
                                     <div className="relative">
                                         <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold ${isCurrentUser
-                                                ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white'
-                                                : isDealer
-                                                    ? 'bg-gradient-to-r from-purple-400 to-pink-500 text-white'
-                                                    : 'bg-gradient-to-r from-blue-400 to-blue-600 text-white'
+                                            ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white'
+                                            : isDealer
+                                                ? 'bg-gradient-to-r from-purple-400 to-pink-500 text-white'
+                                                : 'bg-gradient-to-r from-blue-400 to-blue-600 text-white'
                                             }`}>
                                             {player.username.charAt(0).toUpperCase()}
                                         </div>

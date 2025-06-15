@@ -13,7 +13,7 @@ const CheckoutForm = ({ amount, onSuccess, onError, onCancel, loading, setLoadin
         try {
             console.log(`Creating payment intent for user ${userId}, amount: $${amount}`);
 
-            const response = await fetch(`${API_CONFIG.API_BASE_URL}/api/create-payment-intent`, {
+            const response = await fetch(`/api/create-payment-intent`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -75,7 +75,7 @@ const CheckoutForm = ({ amount, onSuccess, onError, onCancel, loading, setLoadin
 
             // Confirm payment on the backend
             try {
-                const response = await fetch(`${API_CONFIG.API_BASE_URL}/api/confirm-payment`, {
+                const response = await fetch(`/api/confirm-payment`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -186,7 +186,7 @@ const AddFundsModal = ({ onClose, onAddFunds, currentBalance, user }) => {
 
     useEffect(() => {
         // Get Stripe publishable key from backend
-        fetch(`${API_CONFIG.API_BASE_URL}/api/stripe-config`)
+        fetch(`/api/stripe-config`)
             .then(response => response.json())
             .then(data => {
                 console.log('Stripe config loaded');

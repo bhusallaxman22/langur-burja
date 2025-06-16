@@ -6,6 +6,7 @@ import InteractiveBoard from './InteractiveBoard';
 import PlayerList from './PlayerList';
 import GameHeader from './GameHeader';
 import AddFundsModal from './AddFundsModal';
+import ResultNotification from './ResultNotification';
 import { API_CONFIG } from '../config/api';
 
 const GameRoom = ({ user, setUser }) => {
@@ -25,6 +26,8 @@ const GameRoom = ({ user, setUser }) => {
     const [message, setMessage] = useState('');
     const [showResults, setShowResults] = useState(false);
     const [showAddFunds, setShowAddFunds] = useState(false);
+    const [showResultNotification, setShowResultNotification] = useState(false);
+    const [currentUserResult, setCurrentUserResult] = useState(null);
 
     // Function to update user data and sync with localStorage
     const updateUserData = React.useCallback((newUserData) => {
@@ -115,10 +118,16 @@ const GameRoom = ({ user, setUser }) => {
                 }
 
                 const userResult = data.roundResults.find(r => r.playerId === user.id);
-                if (userResult && userResult.won) {
-                    setMessage(`🎉 You won $${userResult.winnings}! Amazing!`);
-                } else if (userResult) {
-                    setMessage(`💔 You lost this round. Better luck next time!`);
+                if (userResult) {
+                    // Set the current user result for the prominent notification
+                    setCurrentUserResult(userResult);
+                    setShowResultNotification(true);
+
+                    if (userResult.won) {
+                        setMessage(`🎉 You won $${userResult.winnings}! Amazing!`);
+                    } else {
+                        setMessage(`💔 You lost this round. Better luck next time!`);
+                    }
                 } else {
                     setMessage('🎉 Round finished! Check your results.');
                 }
@@ -128,6 +137,8 @@ const GameRoom = ({ user, setUser }) => {
         newSocket.on('new_game_started', (data) => {
             setMessage(data.message);
             setShowResults(false);
+            setShowResultNotification(false);
+            setCurrentUserResult(null);
             setGameState(prev => ({
                 ...prev,
                 currentBet: null,
@@ -271,7 +282,7 @@ const GameRoom = ({ user, setUser }) => {
     const currentPlayer = gameState.players.find(p => p.id === user.id);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-4">
+        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-2 md:p-4 safe-area-top safe-area-bottom">
             <div className="max-w-7xl mx-auto">
                 <GameHeader
                     roomCode={roomCode}
@@ -281,8 +292,8 @@ const GameRoom = ({ user, setUser }) => {
                     message={message}
                 />
 
-                <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 mt-6">
-                    <div className="xl:col-span-3 space-y-6">
+                <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 md:gap-6 mt-4 md:mt-6">
+                    <div className="xl:col-span-3 space-y-4 md:space-y-6">
                         <DiceDisplay
                             diceResults={gameState.diceResults}
                             roundResults={gameState.roundResults}
@@ -303,15 +314,15 @@ const GameRoom = ({ user, setUser }) => {
                         )}
 
                         {isDealer && (
-                            <div className="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-xl p-6 shadow-2xl">
-                                <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+                            <div className="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-xl p-4 md:p-6 shadow-2xl">
+                                <h3 className="text-lg md:text-xl font-bold text-white mb-4 flex items-center">
                                     👑 Dealer Controls
                                 </h3>
-                                <div className="flex flex-wrap gap-4">
+                                <div className="flex flex-wrap gap-2 md:gap-4">
                                     {gameState.gameState === 'waiting' && gameState.players.length >= 2 && (
                                         <button
                                             onClick={startRound}
-                                            className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg font-bold transform hover:scale-105 transition-all duration-200 shadow-lg"
+                                            className="bg-green-500 hover:bg-green-600 text-white px-4 md:px-8 py-3 rounded-lg font-bold transform hover:scale-105 transition-all duration-200 shadow-lg mobile-button"
                                         >
                                             🚀 Start Round {gameState.roundNumber + 1}
                                         </button>
@@ -319,7 +330,7 @@ const GameRoom = ({ user, setUser }) => {
                                     {gameState.gameState === 'betting' && (
                                         <button
                                             onClick={rollDice}
-                                            className="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-lg font-bold transform hover:scale-105 transition-all duration-200 shadow-lg animate-pulse"
+                                            className="bg-red-500 hover:bg-red-600 text-white px-4 md:px-8 py-3 rounded-lg font-bold transform hover:scale-105 transition-all duration-200 shadow-lg animate-pulse mobile-button"
                                         >
                                             🎲 Roll Dice
                                         </button>
@@ -327,7 +338,7 @@ const GameRoom = ({ user, setUser }) => {
                                     {gameState.gameState === 'finished' && (
                                         <button
                                             onClick={startNewGame}
-                                            className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-bold transform hover:scale-105 transition-all duration-200 shadow-lg"
+                                            className="bg-blue-500 hover:bg-blue-600 text-white px-4 md:px-8 py-3 rounded-lg font-bold transform hover:scale-105 transition-all duration-200 shadow-lg mobile-button"
                                         >
                                             🆕 Start New Round
                                         </button>
@@ -356,6 +367,15 @@ const GameRoom = ({ user, setUser }) => {
                     user={user}
                 />
             )}
+
+            <ResultNotification
+                result={currentUserResult}
+                visible={showResultNotification}
+                onClose={() => {
+                    setShowResultNotification(false);
+                    setCurrentUserResult(null);
+                }}
+            />
         </div>
     );
 };

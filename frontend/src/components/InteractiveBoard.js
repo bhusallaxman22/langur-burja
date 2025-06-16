@@ -23,9 +23,9 @@ const InteractiveBoard = ({ onPlaceBet, playerBalance, disabled, currentBet, gam
     };
 
     return (
-        <div className="relative max-w-4xl mx-auto">
+        <div className="relative max-w-4xl mx-auto px-2 md:px-0">
             {/* Paper Background with shadows and texture */}
-            <div className="paper-board relative bg-gradient-to-br from-amber-50 to-yellow-100 rounded-lg shadow-2xl border-4 border-amber-200 p-8">
+            <div className="paper-board relative bg-gradient-to-br from-amber-50 to-yellow-100 rounded-lg shadow-2xl border-4 border-amber-200 p-4 md:p-8">
                 {/* Paper texture overlay */}
                 <div className="absolute inset-0 opacity-10 bg-paper-texture rounded-lg pointer-events-none"></div>
 
@@ -36,93 +36,92 @@ const InteractiveBoard = ({ onPlaceBet, playerBalance, disabled, currentBet, gam
                 <div className="absolute bottom-2 right-2 w-6 h-6 border-r-4 border-b-4 border-amber-400 opacity-60"></div>
 
                 {/* Title */}
-                <div className="text-center mb-6">
-                    <h2 className="text-2xl font-bold text-amber-900 mb-2 font-serif">
+                <div className="text-center mb-4 md:mb-6">
+                    <h2 className="text-xl md:text-2xl font-bold text-amber-900 mb-2 font-serif">
                         🎯 Betting Board
                     </h2>
-                    <div className="bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg px-4 py-2 inline-block shadow-lg">
-                        <span className="font-bold">Balance: ${playerBalance}</span>
+                    <div className="bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg px-3 md:px-4 py-2 inline-block shadow-lg">
+                        <span className="font-bold text-sm md:text-base">Balance: ${playerBalance}</span>
                     </div>
                 </div>
 
                 {gameState === 'finished' && (
                     <div className="text-center mb-4 p-3 bg-red-100 border-2 border-red-300 rounded-lg">
-                        <p className="text-red-700 font-bold">⏳ Round finished - waiting for dealer to start new round</p>
+                        <p className="text-red-700 font-bold text-sm md:text-base">⏳ Round finished - waiting for dealer to start new round</p>
                     </div>
                 )}
 
-                {/* Symbol Selection Grid - Smaller and more compact */}
-                <div className="mb-6">
-                    <h3 className="text-lg font-bold text-amber-900 mb-3 text-center font-serif">
+                {/* Symbol Selection Grid - Mobile responsive */}
+                <div className="mb-4 md:mb-6">
+                    <h3 className="text-base md:text-lg font-bold text-amber-900 mb-3 text-center font-serif">
                         Choose Your Symbol
                     </h3>
-                    <div className="grid grid-cols-6 gap-3 max-w-2xl mx-auto">
-                        {symbols.map((symbol) => {
-                            const isSelected = selectedSymbol === symbol.name;
-                            const isHovered = hoverSymbol === symbol.name;
-                            const isCurrent = currentBet && currentBet.symbol === symbol.name;
+                    <div className="grid grid-cols-3 md:grid-cols-6 gap-2 md:gap-3 max-w-2xl mx-auto symbol-grid-mobile md:grid-cols-6">{symbols.map((symbol) => {
+                        const isSelected = selectedSymbol === symbol.name;
+                        const isHovered = hoverSymbol === symbol.name;
+                        const isCurrent = currentBet && currentBet.symbol === symbol.name;
 
-                            return (
-                                <button
-                                    key={symbol.name}
-                                    onClick={() => !disabled && setSelectedSymbol(symbol.name)}
-                                    onMouseEnter={() => setHoverSymbol(symbol.name)}
-                                    onMouseLeave={() => setHoverSymbol('')}
-                                    disabled={disabled}
-                                    className={`relative p-4 rounded-lg border-3 transition-all duration-300 transform bg-white shadow-lg ${isSelected
-                                        ? 'border-amber-500 scale-110 shadow-xl ring-4 ring-amber-300'
-                                        : isCurrent
-                                            ? 'border-green-500 ring-2 ring-green-300'
-                                            : isHovered
-                                                ? 'border-amber-300 scale-105 shadow-xl'
-                                                : 'border-amber-200 hover:scale-105'
-                                        } ${disabled && !isCurrent ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-xl cursor-pointer'}`}
-                                >
-                                    <div className="text-center">
-                                        <div className={`text-3xl mb-1 ${symbol.color} ${isSelected || isCurrent ? 'animate-bounce' : ''}`}>
-                                            {symbol.emoji}
-                                        </div>
-                                        <div className="text-amber-900 font-bold text-xs font-serif">
-                                            {symbol.name.slice(0, 4)}
-                                        </div>
-
-                                        {isSelected && (
-                                            <div className="absolute -top-1 -right-1 bg-amber-500 text-amber-900 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold animate-pulse">
-                                                ✓
-                                            </div>
-                                        )}
-
-                                        {isCurrent && (
-                                            <div className="absolute -top-1 -left-1 bg-green-500 text-green-900 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
-                                                💰
-                                            </div>
-                                        )}
+                        return (
+                            <button
+                                key={symbol.name}
+                                onClick={() => !disabled && setSelectedSymbol(symbol.name)}
+                                onMouseEnter={() => setHoverSymbol(symbol.name)}
+                                onMouseLeave={() => setHoverSymbol('')}
+                                disabled={disabled}
+                                className={`relative p-3 md:p-4 rounded-lg border-3 transition-all duration-300 transform bg-white shadow-lg touch-target ${isSelected
+                                    ? 'border-amber-500 scale-110 shadow-xl ring-4 ring-amber-300'
+                                    : isCurrent
+                                        ? 'border-green-500 ring-2 ring-green-300'
+                                        : isHovered
+                                            ? 'border-amber-300 scale-105 shadow-xl'
+                                            : 'border-amber-200 hover:scale-105'
+                                    } ${disabled && !isCurrent ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-xl cursor-pointer'}`}
+                            >
+                                <div className="text-center">
+                                    <div className={`text-2xl md:text-3xl mb-1 ${symbol.color} ${isSelected || isCurrent ? 'animate-bounce' : ''}`}>
+                                        {symbol.emoji}
                                     </div>
-                                </button>
-                            );
-                        })}
+                                    <div className="text-amber-900 font-bold text-xs font-serif">
+                                        {symbol.name.slice(0, 4)}
+                                    </div>
+
+                                    {isSelected && (
+                                        <div className="absolute -top-1 -right-1 bg-amber-500 text-amber-900 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold animate-pulse">
+                                            ✓
+                                        </div>
+                                    )}
+
+                                    {isCurrent && (
+                                        <div className="absolute -top-1 -left-1 bg-green-500 text-green-900 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+                                            💰
+                                        </div>
+                                    )}
+                                </div>
+                            </button>
+                        );
+                    })}
                     </div>
                 </div>
 
-                {/* Bet Amount Selection - Compact */}
-                <div className="mb-6 max-w-xl mx-auto">
-                    <h3 className="text-lg font-bold text-amber-900 mb-3 text-center font-serif">
+                {/* Bet Amount Selection - Mobile responsive */}
+                <div className="mb-4 md:mb-6 max-w-xl mx-auto">
+                    <h3 className="text-base md:text-lg font-bold text-amber-900 mb-3 text-center font-serif">
                         Select Bet Amount
                     </h3>
 
                     {/* Quick Bet Buttons */}
-                    <div className="grid grid-cols-4 gap-2 mb-3">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3 quick-bet-mobile md:grid-cols-4">
                         {quickBetAmounts.map((amount) => (
                             <button
                                 key={amount}
                                 onClick={() => !disabled && setBetAmount(amount)}
                                 disabled={disabled || amount > playerBalance}
-                                className={`py-2 px-3 rounded-lg font-bold transition-all duration-200 transform shadow-md ${betAmount === amount
+                                className={`py-2 px-2 md:px-3 rounded-lg font-bold transition-all duration-200 transform shadow-md touch-target ${betAmount === amount
                                     ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-white scale-105 shadow-lg'
                                     : 'bg-white text-amber-900 hover:bg-amber-50 hover:scale-105 border-2 border-amber-200'
                                     } ${disabled || amount > playerBalance ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg'}`}
                             >
-                                ${amount}
+                                <span className="text-sm md:text-base">${amount}</span>
                             </button>
                         ))}
                     </div>
@@ -136,7 +135,7 @@ const InteractiveBoard = ({ onPlaceBet, playerBalance, disabled, currentBet, gam
                             disabled={disabled}
                             min="1"
                             max={playerBalance}
-                            className="w-full px-4 py-2 bg-white border-3 border-amber-200 rounded-lg text-amber-900 placeholder-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent disabled:opacity-50 text-center text-lg font-bold shadow-inner"
+                            className="w-full px-4 py-3 bg-white border-3 border-amber-200 rounded-lg text-amber-900 placeholder-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent disabled:opacity-50 text-center text-base md:text-lg font-bold shadow-inner touch-target"
                             placeholder="Custom amount"
                         />
                         <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-amber-700 font-bold">$</div>
@@ -148,7 +147,7 @@ const InteractiveBoard = ({ onPlaceBet, playerBalance, disabled, currentBet, gam
                     <button
                         onClick={handlePlaceBet}
                         disabled={disabled || !selectedSymbol || betAmount <= 0 || betAmount > playerBalance}
-                        className={`px-8 py-3 rounded-lg font-bold text-lg transition-all duration-300 transform shadow-lg ${disabled
+                        className={`px-6 md:px-8 py-3 rounded-lg font-bold text-base md:text-lg transition-all duration-300 transform shadow-lg touch-target ${disabled
                             ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
                             : selectedSymbol && betAmount > 0 && betAmount <= playerBalance
                                 ? 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 hover:scale-105 shadow-xl'
@@ -159,8 +158,8 @@ const InteractiveBoard = ({ onPlaceBet, playerBalance, disabled, currentBet, gam
                     </button>
                 </div>
 
-                {/* Betting Rules - Compact */}
-                <div className="mt-6 bg-amber-100 rounded-lg p-3 border-2 border-amber-200 shadow-inner">
+                {/* Betting Rules - Mobile friendly */}
+                <div className="mt-4 md:mt-6 bg-amber-100 rounded-lg p-3 border-2 border-amber-200 shadow-inner">
                     <h4 className="text-amber-900 font-bold mb-2 text-sm font-serif">📋 Quick Rules:</h4>
                     <ul className="text-amber-800 text-xs space-y-1">
                         <li>• Choose symbol & bet amount</li>

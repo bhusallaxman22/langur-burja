@@ -62,7 +62,7 @@ const GameLobby = ({ user, onLogout }) => {
     );
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative overflow-hidden">
+        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative overflow-hidden safe-area-top safe-area-bottom">
             {/* Animated Background Elements */}
             <div className="absolute inset-0 pointer-events-none">
                 <FloatingSymbol symbol="♦️" delay={0} duration={6} />
@@ -71,39 +71,38 @@ const GameLobby = ({ user, onLogout }) => {
                 <FloatingSymbol symbol="♠️" delay={3} duration={9} />
                 <FloatingSymbol symbol="👑" delay={4} duration={5} />
                 <FloatingSymbol symbol="🏴" delay={5} duration={10} />
-                <FloatingSymbol symbol="🎲" delay={2.5} duration={6} size="text-6xl" />
-                <FloatingSymbol symbol="💰" delay={4.5} duration={8} size="text-5xl" />
+                <FloatingSymbol symbol="🎲" delay={2.5} duration={6} size="text-4xl md:text-6xl" />
+                <FloatingSymbol symbol="💰" delay={4.5} duration={8} size="text-3xl md:text-5xl" />
             </div>
 
             <div className="min-h-screen flex items-center justify-center p-4 relative z-10">
-                <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 w-full max-w-lg border border-white/20">
+                <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-6 md:p-8 w-full max-w-lg border border-white/20">
                     {/* Header */}
-                    <div className="text-center mb-8">
+                    <div className="text-center mb-6 md:mb-8">
                         <div className="mb-4">
-                            <h1 className="text-5xl font-bold bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent mb-2 animate-pulse">
+                            <h1 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent mb-2 animate-pulse">
                                 🎲 Langur Burja
                             </h1>
-                            <p className="text-white/80 text-lg">Traditional Dice Game</p>
+                            <p className="text-white/80 text-base md:text-lg">Traditional Dice Game</p>
                         </div>
 
                         <div className="bg-gradient-to-r from-green-400/20 to-blue-500/20 rounded-xl p-4 border border-green-400/30">
-                            <h2 className="text-2xl font-bold text-white mb-2">
+                            <h2 className="text-lg md:text-2xl font-bold text-white mb-2">
                                 Welcome, {user.username}! 👋
                             </h2>
                             <div className="flex items-center justify-center space-x-2">
-                                <span className="text-green-300 font-bold text-xl">💰 ${user.balance}</span>
+                                <span className="text-green-300 font-bold text-lg md:text-xl">💰 ${user.balance}</span>
                                 <div className="w-2 h-2 bg-green-400 rounded-full animate-ping"></div>
                             </div>
                         </div>
                     </div>
 
                     {/* Game Actions */}
-                    <div className="space-y-6">
-                        {/* Create Game Button */}
+                    <div className="space-y-4 md:space-y-6">{/* Create Game Button */}
                         <button
                             onClick={createGame}
                             disabled={isCreating}
-                            className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                            className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none touch-target"
                         >
                             {isCreating ? (
                                 <div className="flex items-center justify-center space-x-2">
@@ -137,7 +136,7 @@ const GameLobby = ({ user, onLogout }) => {
                                     placeholder="Enter Room Code"
                                     value={roomCode}
                                     onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-                                    className="w-full px-4 py-3 bg-white/10 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent uppercase text-center text-xl font-bold tracking-wider backdrop-blur-sm"
+                                    className="w-full px-4 py-3 bg-white/10 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent uppercase text-center text-lg md:text-xl font-bold tracking-wider backdrop-blur-sm touch-target"
                                     maxLength={6}
                                     disabled={isJoining}
                                 />
@@ -151,7 +150,7 @@ const GameLobby = ({ user, onLogout }) => {
                             <button
                                 onClick={joinGame}
                                 disabled={!roomCode.trim() || isJoining}
-                                className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                                className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none touch-target"
                             >
                                 {isJoining ? (
                                     <div className="flex items-center justify-center space-x-2">
@@ -198,10 +197,10 @@ const GameLobby = ({ user, onLogout }) => {
                         <div className="mt-4 flex justify-center space-x-2">
                             <span className="text-2xl">♦️</span>
                             <span className="text-2xl">♣️</span>
-                            <span className="text-2xl">♥️</span>
-                            <span className="text-2xl">♠️</span>
-                            <span className="text-2xl">👑</span>
-                            <span className="text-2xl">🏴</span>
+                            <span className="text-xl md:text-2xl">♥️</span>
+                            <span className="text-xl md:text-2xl">♠️</span>
+                            <span className="text-xl md:text-2xl">👑</span>
+                            <span className="text-xl md:text-2xl">🏴</span>
                         </div>
                     </div>
 
@@ -209,7 +208,7 @@ const GameLobby = ({ user, onLogout }) => {
                     <div className="mt-6 text-center">
                         <button
                             onClick={onLogout}
-                            className="text-red-400 hover:text-red-300 text-sm font-medium transition-colors duration-200"
+                            className="text-red-400 hover:text-red-300 text-sm font-medium transition-colors duration-200 touch-target py-2 px-4"
                         >
                             🚪 Logout
                         </button>

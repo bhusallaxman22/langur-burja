@@ -147,11 +147,11 @@ const CheckoutForm = ({ amount, onSuccess, onError, onCancel, loading, setLoadin
                 </div>
             )}
 
-            <div className="flex space-x-4">
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
                 <button
                     type="button"
                     onClick={onCancel}
-                    className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200"
+                    className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 touch-target"
                     disabled={loading}
                 >
                     Cancel
@@ -159,7 +159,7 @@ const CheckoutForm = ({ amount, onSuccess, onError, onCancel, loading, setLoadin
                 <button
                     type="submit"
                     disabled={!stripe || loading || !clientSecret}
-                    className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed touch-target"
                 >
                     {loading ? (
                         <div className="flex items-center justify-center space-x-2">
@@ -249,13 +249,13 @@ const AddFundsModal = ({ onClose, onAddFunds, currentBalance, user }) => {
     if (processingComplete) {
         return (
             <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 w-full max-w-md border border-white/20 shadow-2xl text-center">
-                    <div className="text-6xl mb-4 animate-bounce">✅</div>
-                    <h2 className="text-2xl font-bold text-white mb-2">Payment Successful!</h2>
-                    <p className="text-green-300 text-lg mb-2">
+                <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 md:p-8 w-full max-w-md border border-white/20 shadow-2xl text-center">
+                    <div className="text-4xl md:text-6xl mb-4 animate-bounce">✅</div>
+                    <h2 className="text-xl md:text-2xl font-bold text-white mb-2">Payment Successful!</h2>
+                    <p className="text-green-300 text-base md:text-lg mb-2">
                         ${successData?.addedAmount} has been added to your account
                     </p>
-                    <p className="text-white/80">
+                    <p className="text-white/80 text-sm md:text-base">
                         New Balance: ${successData?.newBalance}
                     </p>
                 </div>
@@ -265,25 +265,25 @@ const AddFundsModal = ({ onClose, onAddFunds, currentBalance, user }) => {
 
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 w-full max-w-md border border-white/20 shadow-2xl">
-                <div className="text-center mb-6">
-                    <h2 className="text-3xl font-bold text-white mb-2">💰 Add Funds</h2>
-                    <p className="text-white/80">Current Balance: ${currentBalance}</p>
-                    <p className="text-white/60 text-sm">User: {user.username}</p>
+            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 md:p-8 w-full max-w-md border border-white/20 shadow-2xl">
+                <div className="text-center mb-4 md:mb-6">
+                    <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">💰 Add Funds</h2>
+                    <p className="text-white/80 text-sm md:text-base">Current Balance: ${currentBalance}</p>
+                    <p className="text-white/60 text-xs md:text-sm">User: {user.username}</p>
                 </div>
 
                 {!showPayment ? (
-                    <div className="space-y-6">
+                    <div className="space-y-4 md:space-y-6">
                         {/* Quick Amount Buttons */}
                         <div>
-                            <label className="block text-white font-medium mb-3">Quick Add:</label>
-                            <div className="grid grid-cols-3 gap-3">
+                            <label className="block text-white font-medium mb-3 text-sm md:text-base">Quick Add:</label>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
                                 {quickAmounts.map((quickAmount) => (
                                     <button
                                         key={quickAmount}
                                         type="button"
                                         onClick={() => handleAmountSelect(quickAmount)}
-                                        className="py-2 px-3 rounded-lg font-bold transition-all duration-200 transform hover:scale-105 bg-white/20 text-white hover:bg-white/30"
+                                        className="py-2 md:py-2 px-2 md:px-3 rounded-lg font-bold transition-all duration-200 transform hover:scale-105 bg-white/20 text-white hover:bg-white/30 text-sm md:text-base touch-target"
                                     >
                                         ${quickAmount}
                                     </button>
@@ -293,14 +293,14 @@ const AddFundsModal = ({ onClose, onAddFunds, currentBalance, user }) => {
 
                         {/* Custom Amount Input */}
                         <div>
-                            <label className="block text-white font-medium mb-3">Custom Amount:</label>
+                            <label className="block text-white font-medium mb-3 text-sm md:text-base">Custom Amount:</label>
                             <div className="relative">
                                 <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white font-bold">$</span>
                                 <input
                                     type="number"
                                     value={amount}
                                     onChange={(e) => setAmount(e.target.value)}
-                                    className="w-full pl-8 pr-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent text-center text-xl font-bold"
+                                    className="w-full pl-8 pr-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent text-center text-lg md:text-xl font-bold touch-target"
                                     placeholder="Enter amount"
                                     min="1"
                                     max="10000"
@@ -311,11 +311,11 @@ const AddFundsModal = ({ onClose, onAddFunds, currentBalance, user }) => {
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex space-x-4">
+                        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200"
+                                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 touch-target"
                             >
                                 Cancel
                             </button>
@@ -323,7 +323,7 @@ const AddFundsModal = ({ onClose, onAddFunds, currentBalance, user }) => {
                                 type="button"
                                 onClick={handleCustomAmount}
                                 disabled={!amount || parseFloat(amount) <= 0 || parseFloat(amount) > 10000}
-                                className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed touch-target"
                             >
                                 Continue
                             </button>

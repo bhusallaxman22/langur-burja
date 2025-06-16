@@ -255,21 +255,56 @@ class LangurBurjaGame {
     }
 
     addPlayer(player) {
+        // Check if player is already in the game
+        const existingPlayerIndex = this.players.findIndex(p => p.id === player.id);
+        if (existingPlayerIndex !== -1) {
+            // Update existing player's data (in case of reconnection)
+            this.players[existingPlayerIndex].username = player.username;
+            this.players[existingPlayerIndex].balance = player.balance;
+
+            // Update dealer reference if this player is the dealer
+            if (this.dealer && this.dealer.id === player.id) {
+                this.dealer = this.players[existingPlayerIndex];
+            }
+
+            console.log(`Player ${player.username} rejoined game ${this.roomCode}`);
+            return true;
+        }
+
         if (this.players.length < 6) {
             this.players.push(player);
-            if (this.players.length === 1) {
+            // Only assign dealer if there's no dealer yet (first player)
+            if (!this.dealer) {
                 this.dealer = player;
+                console.log(`Player ${player.username} assigned as dealer for game ${this.roomCode}`);
             }
+            console.log(`Player ${player.username} joined game ${this.roomCode}`);
             return true;
         }
         return false;
     }
 
     removePlayer(playerId) {
+        const playerToRemove = this.players.find(p => p.id === playerId);
+        if (!playerToRemove) {
+            return false; // Player not found
+        }
+
         this.players = this.players.filter(p => p.id !== playerId);
+        console.log(`Player ${playerToRemove.username} removed from game ${this.roomCode}`);
+
+        // Reassign dealer if necessary
         if (this.dealer && this.dealer.id === playerId && this.players.length > 0) {
             this.dealer = this.players[0];
+            console.log(`New dealer assigned: ${this.dealer.username}`);
         }
+
+        // Remove any pending bets from the removed player
+        if (this.bets.has(playerId)) {
+            this.bets.delete(playerId);
+        }
+
+        return true;
     }
 
     placeBet(playerId, symbol, amount) {
@@ -380,6 +415,40 @@ class LangurBurjaGame {
         const roundResults = await this.calculateWinnings(diceResults);
 
         return { diceResults, roundResults };
+    }
+
+    // Validate dealer is still in the game
+    validateDealer() {
+        if (this.dealer && !this.players.find(p => p.id === this.dealer.id)) {
+            console.log(`Warning: Dealer ${this.dealer.username} not found in players list, reassigning...`);
+            this.dealer = this.players.length > 0 ? this.players[0] : null;
+            if (this.dealer) {
+                console.log(`New dealer assigned: ${this.dealer.username}`);
+            }
+        }
+    }
+
+    // Get game status for debugging
+    getGameStatus() {
+        return {
+            roomCode: this.roomCode,
+            playerCount: this.players.length,
+            players: this.players.map(p => ({ id: p.id, username: p.username, balance: p.balance })),
+            dealer: this.dealer ? { id: this.dealer.id, username: this.dealer.username } : null,
+            gameState: this.gameState,
+            currentRound: this.currentRound,
+            activeBets: this.bets.size
+        };
+    }
+
+    // Clean up game resources
+    cleanup() {
+        if (this.roundTimer) {
+            clearTimeout(this.roundTimer);
+            this.roundTimer = null;
+        }
+        this.bets.clear();
+        console.log(`Game ${this.roomCode} cleaned up`);
     }
 }
 
@@ -712,6 +781,25 @@ app.get('/api/debug/transactions/:userId', async (req, res) => {
     }
 });
 
+// Debug route to check active games
+app.get('/api/debug/games', (req, res) => {
+    try {
+        const games = [];
+        for (const [roomCode, game] of activeGames.entries()) {
+            games.push(game.getGameStatus());
+        }
+
+        res.json({
+            totalGames: activeGames.size,
+            totalPlayerSockets: playerSockets.size,
+            games: games,
+            playerSockets: Array.from(playerSockets.entries())
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 // Socket.IO connection handling
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
@@ -731,6 +819,16 @@ io.on('connection', (socket) => {
 
         if (success) {
             socket.join(roomCode);
+
+            // Store room code in socket for disconnect handling
+            socket.roomCode = roomCode;
+            socket.playerId = player.id;
+
+            console.log(`Player ${player.username} joined/rejoined room ${roomCode}`);
+            console.log(`Current dealer: ${game.dealer ? game.dealer.username : 'None'}`);
+
+            // Validate dealer before sending update
+            game.validateDealer();
 
             io.to(roomCode).emit('game_updated', {
                 players: game.players,
@@ -781,6 +879,9 @@ io.on('connection', (socket) => {
             game.startNewGame();
             console.log(`Game ${roomCode}: New game started, resetting to waiting state`);
 
+            // Validate dealer before sending update
+            game.validateDealer();
+
             io.to(roomCode).emit('game_updated', {
                 players: game.players,
                 dealer: game.dealer,
@@ -809,6 +910,8 @@ io.on('connection', (socket) => {
 
             setTimeout(() => {
                 game.gameState = 'finished';
+                // Validate dealer before sending update
+                game.validateDealer();
                 io.to(roomCode).emit('game_updated', {
                     players: game.players,
                     dealer: game.dealer,
@@ -839,8 +942,28 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('leave_game', (data) => {
+        const { roomCode, playerId } = data;
+        handlePlayerDisconnect(socket, roomCode, playerId);
+    });
+
     socket.on('disconnect', () => {
         console.log('User disconnected:', socket.id);
+
+        // Handle player disconnect with a delay to allow for reconnection
+        if (socket.roomCode && socket.playerId) {
+            console.log(`Player ${socket.playerId} disconnected from room ${socket.roomCode}, waiting for potential reconnection...`);
+
+            // Wait 30 seconds before removing player to allow for reconnection
+            setTimeout(() => {
+                const currentSocketId = playerSockets.get(socket.playerId);
+                // Only remove if the socket hasn't been replaced (player hasn't reconnected)
+                if (currentSocketId === socket.id) {
+                    handlePlayerDisconnect(socket, socket.roomCode, socket.playerId);
+                }
+            }, 30000); // 30 seconds delay
+        }
+
         // Remove from playerSockets mapping
         for (const [playerId, socketId] of playerSockets.entries()) {
             if (socketId === socket.id) {
@@ -850,6 +973,36 @@ io.on('connection', (socket) => {
         }
     });
 });
+
+// Helper function to handle player disconnect
+function handlePlayerDisconnect(socket, roomCode, playerId) {
+    const game = activeGames.get(roomCode);
+    if (game) {
+        const removed = game.removePlayer(playerId);
+        if (removed) {
+            console.log(`Player ${playerId} permanently removed from game ${roomCode}`);
+            console.log(`Game status: ${JSON.stringify(game.getGameStatus())}`);
+
+            // If no players left, clean up the game
+            if (game.players.length === 0) {
+                game.cleanup();
+                activeGames.delete(roomCode);
+                console.log(`Game ${roomCode} deleted - no players remaining`);
+            } else {
+                // Validate dealer before notifying remaining players
+                game.validateDealer();
+                io.to(roomCode).emit('game_updated', {
+                    players: game.players,
+                    dealer: game.dealer,
+                    gameState: game.gameState
+                });
+            }
+        }
+    }
+
+    // Remove from socket mapping
+    playerSockets.delete(playerId);
+}
 
 // SPA Fallback - This MUST be the last route
 // Handle React Router routes - serve index.html for all non-API routes
@@ -883,5 +1036,4 @@ server.listen(PORT, () => {
     }
 });
 
-// Export for Vercel
 module.exports = app;

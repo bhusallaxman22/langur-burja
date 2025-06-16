@@ -157,7 +157,14 @@ const GameRoom = ({ user, setUser }) => {
             setTimeout(() => navigate('/lobby'), 2000);
         });
 
-        return () => newSocket.close();
+        return () => {
+            // Notify server that player is leaving
+            newSocket.emit('leave_game', {
+                roomCode,
+                playerId: user.id
+            });
+            newSocket.close();
+        };
     }, [roomCode, user, navigate, updateUserData]);
 
     const placeBet = (symbol, amount) => {
@@ -250,6 +257,16 @@ const GameRoom = ({ user, setUser }) => {
         }
     };
 
+    const leaveGame = () => {
+        if (socket) {
+            socket.emit('leave_game', {
+                roomCode,
+                playerId: user.id
+            });
+        }
+        navigate('/lobby');
+    };
+
     const isDealer = gameState.dealer && gameState.dealer.id === user.id;
     const currentPlayer = gameState.players.find(p => p.id === user.id);
 
@@ -259,7 +276,7 @@ const GameRoom = ({ user, setUser }) => {
                 <GameHeader
                     roomCode={roomCode}
                     user={user}
-                    onLeave={() => navigate('/lobby')}
+                    onLeave={leaveGame}
                     onAddFunds={() => setShowAddFunds(true)}
                     message={message}
                 />

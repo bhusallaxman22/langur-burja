@@ -7,6 +7,7 @@ import BettingSidebar from './BettingSidebar';
 import PlayerList from './PlayerList';
 import GameHeader from './GameHeader';
 import AddFundsModal from './AddFundsModal';
+import ResultNotification from './ResultNotification';
 import { API_CONFIG } from '../config/api';
 
 const GameRoom = ({ user, setUser }) => {
@@ -27,6 +28,8 @@ const GameRoom = ({ user, setUser }) => {
     const [message, setMessage] = useState('');
     const [showResults, setShowResults] = useState(false);
     const [showAddFunds, setShowAddFunds] = useState(false);
+    const [showResultNotification, setShowResultNotification] = useState(false);
+    const [currentUserResult, setCurrentUserResult] = useState(null);
 
     // Function to update user data and sync with localStorage
     const updateUserData = React.useCallback((newUserData) => {
@@ -119,10 +122,16 @@ const GameRoom = ({ user, setUser }) => {
                 }
 
                 const userResult = data.roundResults.find(r => r.playerId === user.id);
-                if (userResult && userResult.won) {
-                    setMessage(`🎉 You won $${userResult.winnings}! Amazing!`);
-                } else if (userResult) {
-                    setMessage(`💔 You lost this round. Better luck next time!`);
+                if (userResult) {
+                    // Set the current user result for the prominent notification
+                    setCurrentUserResult(userResult);
+                    setShowResultNotification(true);
+
+                    if (userResult.won) {
+                        setMessage(`🎉 You won $${userResult.winnings}! Amazing!`);
+                    } else {
+                        setMessage(`💔 You lost this round. Better luck next time!`);
+                    }
                 } else {
                     setMessage('🎉 Round finished! Check your results.');
                 }
@@ -132,6 +141,8 @@ const GameRoom = ({ user, setUser }) => {
         newSocket.on('new_game_started', (data) => {
             setMessage(data.message);
             setShowResults(false);
+            setShowResultNotification(false);
+            setCurrentUserResult(null);
             setGameState(prev => ({
                 ...prev,
                 currentBet: null,
@@ -162,7 +173,14 @@ const GameRoom = ({ user, setUser }) => {
             setTimeout(() => navigate('/lobby'), 2000);
         });
 
-        return () => newSocket.close();
+        return () => {
+            // Notify server that player is leaving
+            newSocket.emit('leave_game', {
+                roomCode,
+                playerId: user.id
+            });
+            newSocket.close();
+        };
     }, [roomCode, user, navigate, updateUserData]);
 
     const placeBet = (symbol, amount) => {
@@ -235,7 +253,7 @@ const GameRoom = ({ user, setUser }) => {
             setTimeout(async () => {
                 try {
                     console.log('Fetching balance from API for verification');
-                    const response = await fetch(`${API_CONFIG.API_BASE_URL}/api/balance/${user.id}`);
+                    const response = await fetch(`/api/balance/${user.id}`);
                     const data = await response.json();
                     if (data.success) {
                         console.log(`Server balance verification: $${data.balance} vs local: $${newBalance}`);
@@ -255,6 +273,16 @@ const GameRoom = ({ user, setUser }) => {
         }
     };
 
+    const leaveGame = () => {
+        if (socket) {
+            socket.emit('leave_game', {
+                roomCode,
+                playerId: user.id
+            });
+        }
+        navigate('/lobby');
+    };
+
     const isDealer = gameState.dealer && gameState.dealer.id === user.id;
     const currentPlayer = gameState.players.find(p => p.id === user.id);
 
@@ -264,7 +292,7 @@ const GameRoom = ({ user, setUser }) => {
                 <GameHeader
                     roomCode={roomCode}
                     user={user}
-                    onLeave={() => navigate('/lobby')}
+                    onLeave={leaveGame}
                     onAddFunds={() => setShowAddFunds(true)}
                     message={message}
                 />
@@ -349,6 +377,15 @@ const GameRoom = ({ user, setUser }) => {
                     user={user}
                 />
             )}
+
+            <ResultNotification
+                result={currentUserResult}
+                visible={showResultNotification}
+                onClose={() => {
+                    setShowResultNotification(false);
+                    setCurrentUserResult(null);
+                }}
+            />
         </div>
     );
 };

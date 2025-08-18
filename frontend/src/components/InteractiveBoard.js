@@ -116,39 +116,39 @@ const InteractiveBoard = ({ onPlaceBet, playerBalance, disabled, currentBet, gam
                         <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wide mb-3">1. Symbol</h3>
                         <div className="grid grid-cols-6 gap-3" data-testid="symbol-grid">
                             {symbols.map((symbol, index) => {
-                            const isSelected = selectedSymbol === symbol.name;
-                            const isHovered = hoverSymbol === symbol.name;
-                            const isCurrent = currentBet && currentBet.symbol === symbol.name;
+                                const isSelected = selectedSymbol === symbol.name;
+                                const isHovered = hoverSymbol === symbol.name;
+                                const isCurrent = currentBet && currentBet.symbol === symbol.name;
 
-                            const baseClasses = 'relative p-3 rounded-xl border transition-all duration-200 flex flex-col items-center justify-center focus:outline-none focus-visible:ring-4 focus-visible:ring-yellow-400/60';
-                            let stateClasses = 'border-white/15 bg-white/5 hover:border-white/40 hover:translate-y-[-2px]';
-                            if (isSelected) stateClasses = 'border-yellow-400 bg-yellow-500/20 shadow-lg scale-105';
-                            else if (isCurrent) stateClasses = 'border-green-400 bg-green-500/20';
-                            else if (isHovered) stateClasses = 'border-yellow-300/60 bg-white/10';
+                                const baseClasses = 'relative p-3 rounded-xl border transition-all duration-200 flex flex-col items-center justify-center focus:outline-none focus-visible:ring-4 focus-visible:ring-yellow-400/60';
+                                let stateClasses = 'border-white/15 bg-white/5 hover:border-white/40 hover:translate-y-[-2px]';
+                                if (isSelected) stateClasses = 'border-yellow-400 bg-yellow-500/20 shadow-lg scale-105';
+                                else if (isCurrent) stateClasses = 'border-green-400 bg-green-500/20';
+                                else if (isHovered) stateClasses = 'border-yellow-300/60 bg-white/10';
 
-                            return (
-                                <button
-                                    key={symbol.name}
-                                    ref={el => { symbolButtonRefs.current[index] = el; }}
-                                    aria-pressed={isSelected}
-                                    aria-label={`Symbol ${symbol.name}${isCurrent ? ' (current bet)' : ''}`}
-                                    onClick={() => !disabled && setSelectedSymbol(symbol.name)}
-                                    onMouseEnter={() => setHoverSymbol(symbol.name)}
-                                    onMouseLeave={() => setHoverSymbol('')}
-                                    disabled={disabled}
-                                    className={`${baseClasses} ${stateClasses} ${disabled && !isCurrent ? 'opacity-40 cursor-not-allowed' : ''}`}
-                                >
-                                    <span className={`text-2xl mb-1 select-none ${symbol.color} ${(isSelected || isCurrent) ? 'animate-bounce' : ''}`}>{symbol.emoji}</span>
-                                    <span className="text-[10px] font-semibold tracking-wide text-white/80">{symbol.name.slice(0, 4)}</span>
-                                    {isSelected && !isCurrent && (
-                                        <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-yellow-400 text-yellow-900 text-[10px] font-bold flex items-center justify-center animate-pulse">✓</span>
-                                    )}
-                                    {isCurrent && (
-                                        <span className="absolute -top-1 -left-1 w-5 h-5 rounded-full bg-green-500 text-white text-[10px] font-bold flex items-center justify-center">💰</span>
-                                    )}
-                                </button>
-                            );
-                        })}
+                                return (
+                                    <button
+                                        key={symbol.name}
+                                        ref={el => { symbolButtonRefs.current[index] = el; }}
+                                        aria-pressed={isSelected}
+                                        aria-label={`Symbol ${symbol.name}${isCurrent ? ' (current bet)' : ''}`}
+                                        onClick={() => !disabled && setSelectedSymbol(symbol.name)}
+                                        onMouseEnter={() => setHoverSymbol(symbol.name)}
+                                        onMouseLeave={() => setHoverSymbol('')}
+                                        disabled={disabled}
+                                        className={`${baseClasses} ${stateClasses} ${disabled && !isCurrent ? 'opacity-40 cursor-not-allowed' : ''}`}
+                                    >
+                                        <span className={`text-2xl mb-1 select-none ${symbol.color} ${(isSelected || isCurrent) ? 'animate-bounce' : ''}`}>{symbol.emoji}</span>
+                                        <span className="text-[10px] font-semibold tracking-wide text-white/80">{symbol.name.slice(0, 4)}</span>
+                                        {isSelected && !isCurrent && (
+                                            <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-yellow-400 text-yellow-900 text-[10px] font-bold flex items-center justify-center animate-pulse">✓</span>
+                                        )}
+                                        {isCurrent && (
+                                            <span className="absolute -top-1 -left-1 w-5 h-5 rounded-full bg-green-500 text-white text-[10px] font-bold flex items-center justify-center">💰</span>
+                                        )}
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
                     {/* Amount + Action */}
@@ -195,8 +195,8 @@ const InteractiveBoard = ({ onPlaceBet, playerBalance, disabled, currentBet, gam
                                 onClick={handlePlaceBet}
                                 disabled={disabled || !selectedSymbol || betAmount <= 0 || betAmount > playerBalance}
                                 className={`w-full py-3 rounded-lg font-bold text-sm transition-all focus:outline-none focus-visible:ring-4 focus-visible:ring-green-400/60 ${disabled || !selectedSymbol || betAmount <= 0 || betAmount > playerBalance
-                                        ? 'bg-white/10 text-white/40 cursor-not-allowed'
-                                        : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg hover:shadow-xl hover:translate-y-[-2px]'
+                                    ? 'bg-white/10 text-white/40 cursor-not-allowed'
+                                    : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg hover:shadow-xl hover:translate-y-[-2px]'
                                     }`}
                             >
                                 {disabled && gameState === 'finished' ? '⏳ Finished' : disabled && currentBet ? '✅ Bet Placed' : '💰 Place Bet'}

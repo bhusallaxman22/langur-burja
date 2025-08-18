@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { useParams, useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 import DiceDisplay from './DiceDisplay';
-import InteractiveBoard from './InteractiveBoard';
+import BettingSidebar from './BettingSidebar';
 import PlayerList from './PlayerList';
 import GameHeader from './GameHeader';
 import AddFundsModal from './AddFundsModal';
@@ -20,7 +21,8 @@ const GameRoom = ({ user, setUser }) => {
         diceResults: [],
         currentBet: null,
         roundResults: [],
-        isRolling: false
+        isRolling: false,
+        bettingDeadline: null // timestamp when betting closes
     });
     const [message, setMessage] = useState('');
     const [showResults, setShowResults] = useState(false);
@@ -71,7 +73,8 @@ const GameRoom = ({ user, setUser }) => {
                 diceResults: [],
                 roundResults: [],
                 isRolling: false,
-                currentBet: null
+                currentBet: null,
+                bettingDeadline: data.bettingDeadline || (Date.now() + 30000) // fallback 30s
             }));
             setShowResults(false);
             setMessage('🎲 New round started! Place your bets.');
@@ -105,7 +108,8 @@ const GameRoom = ({ user, setUser }) => {
                     roundResults: data.roundResults,
                     players: data.players,
                     gameState: 'finished',
-                    isRolling: false
+                    isRolling: false,
+                    bettingDeadline: null
                 }));
                 setShowResults(true);
 
@@ -132,7 +136,8 @@ const GameRoom = ({ user, setUser }) => {
                 ...prev,
                 currentBet: null,
                 diceResults: [],
-                roundResults: []
+                roundResults: [],
+                bettingDeadline: null
             }));
         });
 
@@ -255,7 +260,7 @@ const GameRoom = ({ user, setUser }) => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-4">
-            <div className="max-w-7xl mx-auto">
+            <div className="max-w-[1600px] mx-auto">
                 <GameHeader
                     roomCode={roomCode}
                     user={user}
@@ -263,38 +268,30 @@ const GameRoom = ({ user, setUser }) => {
                     onAddFunds={() => setShowAddFunds(true)}
                     message={message}
                 />
-
-                <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 mt-6">
-                    <div className="xl:col-span-3 space-y-6">
-                        <DiceDisplay
-                            diceResults={gameState.diceResults}
-                            roundResults={gameState.roundResults}
+                {/* New 3-column responsive layout: Betting | Dice/Results | Players */}
+                <div className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[calc(100vh-200px)]">
+                    {/* Left: Compact Betting Sidebar */}
+                    <div className="lg:col-span-3 order-2 lg:order-1 h-full">
+                        <BettingSidebar
+                            onPlaceBet={placeBet}
+                            playerBalance={currentPlayer?.balance || user.balance}
+                            disabled={!!gameState.currentBet || gameState.gameState !== 'betting'}
                             currentBet={gameState.currentBet}
-                            isRolling={gameState.isRolling}
-                            showResults={showResults}
-                            roundNumber={gameState.roundNumber}
+                            gameState={gameState.gameState}
+                            bettingDeadline={gameState.bettingDeadline}
                         />
-
-                        {(gameState.gameState === 'betting' || gameState.gameState === 'finished') && (
-                            <InteractiveBoard
-                                onPlaceBet={placeBet}
-                                playerBalance={currentPlayer?.balance || user.balance}
-                                disabled={!!gameState.currentBet || gameState.gameState === 'finished'}
-                                currentBet={gameState.currentBet}
-                                gameState={gameState.gameState}
-                            />
-                        )}
-
+                        {/* Legacy board removed for cleaner, focused layout */}
                         {isDealer && (
-                            <div className="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-xl p-6 shadow-2xl">
-                                <h3 className="text-xl font-bold text-white mb-4 flex items-center">
-                                    👑 Dealer Controls
+                            <div className="mt-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-xl p-4 md:p-6 shadow-2xl">
+                                <h3 className="text-lg md:text-xl font-bold text-white mb-4 flex items-center gap-2">
+                                    <span>👑 Dealer</span>
+                                    <span className="text-xs bg-black/20 px-2 py-1 rounded-full">Controls</span>
                                 </h3>
-                                <div className="flex flex-wrap gap-4">
+                                <div className="flex flex-col gap-3">
                                     {gameState.gameState === 'waiting' && gameState.players.length >= 2 && (
                                         <button
                                             onClick={startRound}
-                                            className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg font-bold transform hover:scale-105 transition-all duration-200 shadow-lg"
+                                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-bold transition-all shadow-lg hover:shadow-xl"
                                         >
                                             🚀 Start Round {gameState.roundNumber + 1}
                                         </button>
@@ -302,7 +299,7 @@ const GameRoom = ({ user, setUser }) => {
                                     {gameState.gameState === 'betting' && (
                                         <button
                                             onClick={rollDice}
-                                            className="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-lg font-bold transform hover:scale-105 transition-all duration-200 shadow-lg animate-pulse"
+                                            className="bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg font-bold transition-all shadow-lg hover:shadow-xl animate-pulse"
                                         >
                                             🎲 Roll Dice
                                         </button>
@@ -310,7 +307,7 @@ const GameRoom = ({ user, setUser }) => {
                                     {gameState.gameState === 'finished' && (
                                         <button
                                             onClick={startNewGame}
-                                            className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-bold transform hover:scale-105 transition-all duration-200 shadow-lg"
+                                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-bold transition-all shadow-lg hover:shadow-xl"
                                         >
                                             🆕 Start New Round
                                         </button>
@@ -320,7 +317,20 @@ const GameRoom = ({ user, setUser }) => {
                         )}
                     </div>
 
-                    <div className="xl:col-span-1">
+                    {/* Center: Dice & Round Info */}
+                    <div className="lg:col-span-6 order-1 lg:order-2 space-y-6">
+                        <DiceDisplay
+                            diceResults={gameState.diceResults}
+                            roundResults={gameState.roundResults}
+                            currentBet={gameState.currentBet}
+                            isRolling={gameState.isRolling}
+                            showResults={showResults}
+                            roundNumber={gameState.roundNumber}
+                        />
+                    </div>
+
+                    {/* Right: Players */}
+                    <div className="lg:col-span-3 order-3 h-full">
                         <PlayerList
                             players={gameState.players}
                             dealer={gameState.dealer}
@@ -344,3 +354,12 @@ const GameRoom = ({ user, setUser }) => {
 };
 
 export default GameRoom;
+
+GameRoom.propTypes = {
+    user: PropTypes.shape({
+        id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+        username: PropTypes.string.isRequired,
+        balance: PropTypes.number.isRequired
+    }).isRequired,
+    setUser: PropTypes.func.isRequired
+};

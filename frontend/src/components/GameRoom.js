@@ -307,42 +307,14 @@ const GameRoom = ({ user, setUser }) => {
                             currentBet={gameState.currentBet}
                             gameState={gameState.gameState}
                             bettingDeadline={gameState.bettingDeadline}
+                            isDealer={isDealer}
+                            onStartRound={startRound}
+                            onRollDice={rollDice}
+                            onStartNewGame={startNewGame}
+                            roundNumber={gameState.roundNumber}
+                            playersCount={gameState.players.length}
                         />
                         {/* Legacy board removed for cleaner, focused layout */}
-                        {isDealer && (
-                            <div className="mt-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-xl p-4 md:p-6 shadow-2xl">
-                                <h3 className="text-lg md:text-xl font-bold text-white mb-4 flex items-center gap-2">
-                                    <span>👑 Dealer</span>
-                                    <span className="text-xs bg-black/20 px-2 py-1 rounded-full">Controls</span>
-                                </h3>
-                                <div className="flex flex-col gap-3">
-                                    {gameState.gameState === 'waiting' && gameState.players.length >= 2 && (
-                                        <button
-                                            onClick={startRound}
-                                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-bold transition-all shadow-lg hover:shadow-xl"
-                                        >
-                                            🚀 Start Round {gameState.roundNumber + 1}
-                                        </button>
-                                    )}
-                                    {gameState.gameState === 'betting' && (
-                                        <button
-                                            onClick={rollDice}
-                                            className="bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg font-bold transition-all shadow-lg hover:shadow-xl animate-pulse"
-                                        >
-                                            🎲 Roll Dice
-                                        </button>
-                                    )}
-                                    {gameState.gameState === 'finished' && (
-                                        <button
-                                            onClick={startNewGame}
-                                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-bold transition-all shadow-lg hover:shadow-xl"
-                                        >
-                                            🆕 Start New Round
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        )}
                     </div>
 
                     {/* Center: Dice & Round Info */}

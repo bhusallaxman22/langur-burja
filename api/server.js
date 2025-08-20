@@ -18,7 +18,8 @@ const corsOptions = {
         ? [
             'https://langur-burja-delta.vercel.app',
             'https://langur-burja-git-main-bhusallaxman22.vercel.app',
-            'https://langur-burja-bhusallaxman22.vercel.app'
+            'https://langur-burja-bhusallaxman22.vercel.app',
+            'https://langurburja.bhusallaxman.com.np'
         ]
         : "http://localhost:3000",
     methods: ["GET", "POST"],
@@ -138,19 +139,26 @@ async function initDatabase() {
     `);
 
         await connection.execute(`
-      CREATE TABLE IF NOT EXISTS balance_transactions (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT,
-        transaction_type ENUM('deposit', 'withdrawal', 'bet_win', 'bet_loss') NOT NULL,
-        amount DECIMAL(10,2) NOT NULL,
-        balance_before DECIMAL(10,2) NOT NULL,
-        balance_after DECIMAL(10,2) NOT NULL,
-        description VARCHAR(255),
-        stripe_payment_intent_id VARCHAR(255),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id)
-      )
-    `);
+            CREATE TABLE IF NOT EXISTS balance_transactions (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT,
+                transaction_type ENUM('deposit', 'withdrawal', 'bet_win', 'bet_loss', 'bet_wager') NOT NULL,
+                amount DECIMAL(10,2) NOT NULL,
+                balance_before DECIMAL(10,2) NOT NULL,
+                balance_after DECIMAL(10,2) NOT NULL,
+                description VARCHAR(255),
+                stripe_payment_intent_id VARCHAR(255),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        `);
+
+        // Attempt to extend enum if table already existed without 'bet_wager'
+        try {
+            await connection.execute(`ALTER TABLE balance_transactions MODIFY COLUMN transaction_type ENUM('deposit','withdrawal','bet_win','bet_loss','bet_wager') NOT NULL`);
+        } catch (e) {
+            // Ignore if already modified
+        }
 
         console.log('Database initialized successfully');
         await connection.end();
@@ -339,7 +347,8 @@ class LangurBurjaGame {
             const count = symbolCounts[bet.symbol] || 0;
 
             if (count > 0) {
-                const winnings = bet.amount + (bet.amount * count);
+                // Payout includes original stake already deducted + profit: bet * (count + 1)
+                const winnings = bet.amount * (count + 1);
                 const oldBalance = player.balance;
                 player.balance += winnings;
 
@@ -361,14 +370,7 @@ class LangurBurjaGame {
                     newBalance: player.balance
                 });
             } else {
-                await updateUserBalance(
-                    player.id,
-                    player.balance,
-                    'bet_loss',
-                    bet.amount,
-                    `Lost ${bet.amount} betting on ${bet.symbol} in round ${this.currentRound}`
-                );
-
+                // Loss already reflected by wager deduction; record outcome (no additional balance change)
                 roundResults.push({
                     playerId,
                     won: false,
@@ -841,11 +843,26 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('place_bet', (data) => {
+    socket.on('place_bet', async (data) => {
         const { roomCode, playerId, symbol, amount } = data;
         const game = activeGames.get(roomCode);
 
         if (game && game.placeBet(playerId, symbol, amount)) {
+            // Persist immediate wager deduction
+            try {
+                const player = game.players.find(p => p.id === playerId);
+                if (player) {
+                    await updateUserBalance(
+                        player.id,
+                        player.balance,
+                        'bet_wager',
+                        amount,
+                        `Placed bet of ${amount} on ${symbol} in round ${game.currentRound + 1}`
+                    );
+                }
+            } catch (e) {
+                console.error('Error recording bet_wager transaction:', e.message);
+            }
             io.to(roomCode).emit('bet_placed', {
                 playerId,
                 symbol,
@@ -865,9 +882,11 @@ io.on('connection', (socket) => {
             game.startNewRound();
             console.log(`Game ${roomCode}: Round ${game.currentRound} started`);
 
+            const bettingDeadline = Date.now() + 30000; // 30s betting window
             io.to(roomCode).emit('round_started', {
                 roundNumber: game.currentRound,
-                gameState: game.gameState
+                gameState: game.gameState,
+                bettingDeadline
             });
         }
     });
